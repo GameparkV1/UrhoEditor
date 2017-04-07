@@ -2,6 +2,7 @@
 
 void Selectron::SetDelegate(Selectron* delegateTarget)
 {
+    const bool delegateChanged = delegateTarget != delegate_;
     if (delegate_)
         disconnect(delegate_);
 
@@ -9,7 +10,6 @@ void Selectron::SetDelegate(Selectron* delegateTarget)
     if (delegate_ = delegateTarget)
     {
         // Connect for forwarding signals as ourself
-
         connect(delegate_, &Selectron::SelectionChanged, [=](void* who, Selectron* sel) {
             emit SelectionChanged(who, this);
         });
@@ -21,10 +21,11 @@ void Selectron::SetDelegate(Selectron* delegateTarget)
         connect(delegate_, &Selectron::SelectionRejected, [=](void* source) {
             emit SelectionRejected(source);
         });
-
-        // Delegate selectron has changed, now tell EVERYONE about it
-        emit SelectionChanged(0x0, this);
     }
+
+    // Delegate selectron has changed, now tell EVERYONE about it so they can respond
+    if (delegateChanged)
+        emit SelectionChanged(0x0, this);
 }
 
 std::shared_ptr<DataSource> Selectron::Selected(unsigned idx) const 
