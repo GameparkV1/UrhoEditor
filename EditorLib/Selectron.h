@@ -8,7 +8,12 @@
 
 /// A Selectron governs the selection status of something in a common place.
 /// Used instead of having controls subscribing to each other all over the place.
-class Selectron : public QObject
+/// Insanity:
+/// A Selectron may potentially delegate to another selectron, through this controls may work
+/// with a global level selectron whose delegate may change. Signal/slot connections then remain
+/// singular to just that global instance and the listeners are not tasked with knowing what Selectron
+/// they're actually talking to.
+class EDITORLIB_EXPORT Selectron : public QObject
 {
     Q_OBJECT;
 public:
@@ -20,11 +25,13 @@ public:
     {
     }
 
+    void SetDelegate(Selectron* delegateTarget);
+
     /// Return the datasource at the given index.
-    std::shared_ptr<DataSource> Selected(unsigned idx = 0) const { return selected_.size() > idx ? selected_[idx] : 0x0; }
+    std::shared_ptr<DataSource> Selected(unsigned idx = 0) const;
 
     /// Return the most recently selected datasource. Just the last element.
-    std::shared_ptr<DataSource> MostRecentSelected() const { return selected_.size() > 0 ? selected_.back() : 0x0; }
+    std::shared_ptr<DataSource> MostRecentSelected() const;
 
     /// Returns the number of currently selected items.
     unsigned GetSelectedCount() const { return selected_.size(); }
@@ -74,9 +81,10 @@ signals:
 
 private:
     std::vector< std::shared_ptr<DataSource> > selected_;
+    Selectron* delegate_ = 0x0;
 };
 
-class SelectronLinked
+class EDITORLIB_EXPORT SelectronLinked
 {
 public:
     void SetSelectron(Selectron* sel) {
